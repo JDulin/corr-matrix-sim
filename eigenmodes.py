@@ -14,8 +14,7 @@ def eigenmodes(args):
     filename = '%(eigenmodes)s_Top%(top)s.csv' % args
     print filename
     with open(filename, 'wb') as csvfile:
-        writer = csv.writer(csvfile, delimiter=' ', 
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        writer = csv.writer(csvfile, delimiter=' ')
         writer.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
 
 def commands():

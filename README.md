@@ -12,8 +12,8 @@ topology, set of compactification lengths, and set of oblique angles.
 2)  A mode-mode correlation matrix function which returns 
 a 837 x 837 square matrix as a Numpy array from a given csv file of eigenmodes.
 
-Together, these tools make a convenient workflow for computing  
-reproducible mode-mode correlation matrix for cosmic topology searches using 
+Together, these tools make a convenient workflow for computing reproducible 
+mode-mode correlation matrices for cosmic topology searches using 
 the correlation matrix of the Planck CMB.
 
 ##  Installation
