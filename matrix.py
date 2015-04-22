@@ -32,6 +32,15 @@ def command():
     
     return parser.parse_args().csvfile
 
+def reader(filename):
+    """ Reads eigenmode csv file with line by line generator.  """
+    with open(filename, 'rb') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            yield row
+
 if __name__ == '__main__':
     print "Correlation computation in progress..."
+    for row in reader(command()):
+        print row
 

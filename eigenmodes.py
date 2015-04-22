@@ -1,7 +1,7 @@
 """
 John Dulin
 Case Western Reserve University
-April 20, 2015
+April 21, 2015
 """
 
 import sys
@@ -9,13 +9,48 @@ import argparse
 import numpy as np
 import csv
 
+def three_torus(lx, ly, lz, n):  
+    b = 2
+    for i in xrange(1, n):
+        mode = np.array([i, i, i])
+        size = np.array([lx, ly, lz])
+        k = np.dot(np.pi, np.divide(mode, size))
+        if i % 2 == 1:
+            return np.append([ 1, (i % b)+1], k, 1)
+        elif i % 2 == 0:
+            return np.append([ 2, (i % b)+1], k, 1)
+
+
+def half_turn():
+    print "Half"
+
+def quarter_turn():
+    print "Quarter"
+
+topologies = {1 : three_torus, 
+                2: half_turn, 
+                3: quarter_turn }
+
+'''
 def eigenmodes(args):
     """ Produces final csv file of eigenmode terms for correlation matrix computation. """
-    filename = '%(eigenmodes)s_Top%(top)s.csv' % args
-    print filename
+    filename = '%(eigenmodes)s_Top%(top)s_%(lx)s_%(ly)s_%(lz)s.csv' % args
     with open(filename, 'wb') as csvfile:
-        writer = csv.writer(csvfile, delimiter=' ')
-        writer.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+        writer = csv.writer(csvfile, delimiter=',')
+        b = 2
+        for i in xrange(args['eigenmodes'] * b): # TODO: Take modulus of wavemodes.
+            writer.writerow([i+1, 1] + topologies[1](args['lx'], args['ly'], args['lz'], i).tolist())
+'''
+
+def test_eigenmodes(args):
+    filename = '%(eigenmodes)s_Top%(top)s_%(lx)s_%(ly)s_%(lz)s.csv' % args
+    with open(filename, 'wb') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        b = 2  ## TODO: For arbitrary top
+        for i in xrange(args['eigenmodes'] * b):
+            print topologies[1](args['lx'], args['ly'], args['lz'], args['eigenmodes'])
+            print args['eigenmodes']
+            writer.writerow(topologies[1](args['lx'], args['ly'], args['lz'], args['eigenmodes']))
 
 def commands():
     """  
@@ -46,4 +81,4 @@ def commands():
 if __name__ == '__main__':
     """  Run application. """
     print "Test in Progress"
-    eigenmodes(commands())
+    test_eigenmodes(commands())
