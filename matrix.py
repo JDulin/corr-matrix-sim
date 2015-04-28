@@ -1,4 +1,10 @@
 
+"""
+John Dulin
+Case Western Reserve University
+April 27, 2015
+"""
+
 import argparse
 import csv
 import numpy as np

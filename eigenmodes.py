@@ -1,7 +1,7 @@
 """
 John Dulin
 Case Western Reserve University
-April 21, 2015
+April 27, 2015
 """
 
 import sys
@@ -9,48 +9,51 @@ import argparse
 import numpy as np
 import csv
 
-def three_torus(lx, ly, lz, n):  
-    b = 2
-    for i in xrange(1, n):
-        mode = np.array([i, i, i])
-        size = np.array([lx, ly, lz])
-        k = np.dot(np.pi, np.divide(mode, size))
-        if i % 2 == 1:
-            return np.append([ 1, (i % b)+1], k, 1)
-        elif i % 2 == 0:
-            return np.append([ 2, (i % b)+1], k, 1)
+# TODO: Oblique
+def three_torus(n, j, size, angles):  
+    mode = np.array([n, n, n])
+    k = np.divide(mode, size)   
+    if j == 1:
+        return np.append([n, j, 1], k)
+    elif j == 2:
+        return np.append([n, j, 7], k)
 
-
-def half_turn():
+def half_turn(n, j, size, angles):
     print "Half"
 
-def quarter_turn():
-    print "Quarter"
+def quarter_turn(n, j, size, angles):
+    print "half"
+
+def third_turn():
+    print "third turn"
+
+def sixth_turn():
+    print "Sixth turn"
 
 topologies = {1 : three_torus, 
-                2: half_turn, 
-                3: quarter_turn }
+              2 : half_turn, 
+              3 : quarter_turn,
+              4 : third_turn, 
+              5 : sixth_turn }
 
-'''
-def eigenmodes(args):
-    """ Produces final csv file of eigenmode terms for correlation matrix computation. """
-    filename = '%(eigenmodes)s_Top%(top)s_%(lx)s_%(ly)s_%(lz)s.csv' % args
-    with open(filename, 'wb') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',')
-        b = 2
-        for i in xrange(args['eigenmodes'] * b): # TODO: Take modulus of wavemodes.
-            writer.writerow([i+1, 1] + topologies[1](args['lx'], args['ly'], args['lz'], i).tolist())
-'''
+## TODO: right number of b modes?
+bterms = {1:2, 2:2, 3:4, 4:3, 5:6}
 
 def test_eigenmodes(args):
     filename = '%(eigenmodes)s_Top%(top)s_%(lx)s_%(ly)s_%(lz)s.csv' % args
+    size = np.array([args['lx'], args['ly'], args['lz']])
+    angles = np.array([args['ax'], args['ay'], args['az']])
+    modes = args['eigenmodes']
+    top = args['top']
+    terms = bterms[top]
+    
     with open(filename, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        b = 2  ## TODO: For arbitrary top
-        for i in xrange(args['eigenmodes'] * b):
-            print topologies[1](args['lx'], args['ly'], args['lz'], args['eigenmodes'])
-            print args['eigenmodes']
-            writer.writerow(topologies[1](args['lx'], args['ly'], args['lz'], args['eigenmodes']))
+        for mode in xrange(1, modes+1):
+            for term in xrange(1, terms+1):
+                ## TODO: Modulus eigenmodes? 
+                writer.writerow(topologies[top](mode, term, size, angles))
+        
 
 def commands():
     """  
