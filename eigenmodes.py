@@ -9,20 +9,19 @@ import argparse
 import numpy as np
 import csv
 
-# TODO: Oblique
 def three_torus(n, j, size, angles):  
     mode = np.array([n, n, n])
-    k = np.divide(mode, size)   
-    if j == 1:
-        return np.append([n, j, 1], k)
-    elif j == 2:
-        return np.append([n, j, 7], k)
+    T = np.array([[0, 0, size[0]], 
+            [size[1]*np.sin(angles[0]), 0, size[1]], 
+                [size[2]*np.cos(angles[2])*np.sin(angles[1]), size[2]*np.sin(angles[2])*np.sin(angles[1]), size[2]*np.cos(angles[1])]])
+    k = np.dot(T, mode)
+    return np.append([n, j, 1], k)
 
 def half_turn(n, j, size, angles):
     print "Half"
 
 def quarter_turn(n, j, size, angles):
-    print "half"
+    print "quarter"
 
 def third_turn():
     print "third turn"
@@ -37,10 +36,10 @@ topologies = {1 : three_torus,
               5 : sixth_turn }
 
 ## TODO: right number of b modes?
-bterms = {1:2, 2:2, 3:4, 4:3, 5:6}
+bterms = {1:1, 2:2, 3:4, 4:3, 5:6}
 
 def test_eigenmodes(args):
-    filename = '%(eigenmodes)s_Top%(top)s_%(lx)s_%(ly)s_%(lz)s.csv' % args
+    filename = '%(eigenmodes)s_Top%(top)s_%(lx)s_%(ly)s_%(lz)s_%(ax)s_%(ay)s_%(az)s.csv' % args
     size = np.array([args['lx'], args['ly'], args['lz']])
     angles = np.array([args['ax'], args['ay'], args['az']])
     modes = args['eigenmodes']
@@ -48,13 +47,14 @@ def test_eigenmodes(args):
     terms = bterms[top]
     
     with open(filename, 'wb') as csvfile:
-        writer = csv.writer(csvfile, delimiter=',')
+        writer = csv.writer(csvfile, delimiter=' ')
         for mode in xrange(1, modes+1):
             for term in xrange(1, terms+1):
-                ## TODO: Modulus eigenmodes? 
-                writer.writerow(topologies[top](mode, term, size, angles))
+                planewave = topologies[top](mode, term, size, angles).tolist()
+                n, j = planewave[0], planewave[1]
+                planewave[0], planewave[1] = int(n), int(j)
+                writer.writerow(planewave)
         
-
 def commands():
     """  
     Parses command line arguments.  
