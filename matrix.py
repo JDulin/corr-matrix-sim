@@ -10,6 +10,7 @@ import csv
 import numpy as np
 import scipy as sp
 from scipy import special
+import complexIO
 
 def sph_bessel(ell, z):
     """
@@ -40,3 +41,4 @@ if __name__ == '__main__':
     print "Correlation computation in progress..."
     for row in reader(command()):
         print row
+        print complexIO.from_text(row[1])

@@ -29,11 +29,16 @@ def read_number(text):
             buff.append(char)
         else:
             break
+    ## TODO: Work for both '+' and '-'
     uvpair = ''.join(buff).split('+')
     return np.complex128(np.float64(uvpair[0]) + 1j * np.float64(uvpair[1]))
 
+def text_complex(z):
+    return str(z).strip('(').strip(')').replace('j', 'i')
+
 def from_text(ring):
     """ Converts a string complex to numpy.complex128. """
+    ## TODO: Work for both '+' and '-'
     uvpair = ring.split('+')
     uvpair[1] = uvpair[1].strip('j').strip('i')
     return np.complex128(np.float64(uvpair[0]) + 1j * np.float64(uvpair[1]))

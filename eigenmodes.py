@@ -8,6 +8,7 @@ import sys
 import argparse
 import numpy as np
 import csv
+import complexIO
 
 ##  Topology plane wave term functions.  Indexed by 'topologies' dict, produces a single plane wave indexed by j.  
 ##  Factor of 2pi removed from wave vector.  Must be added in matrix computation.  
@@ -51,17 +52,16 @@ def quarter_turn(n, j, size, angles):
                     [0, 0, 1] ])
     x = 1/2.0
     nz = mode[2]
-    ## TODO: Numpy arrays must be homogenous - Line 70 returns a complex128 array.
-    ## TODO: Complex output form for coeffs - '(1+0j)'.  Parens added.
     if j >= 1:
         coeff = x
         if j >= 2:
-            coeff = np.complex128(x * j ** nz)
+            coeff = np.complex128(x * (1j ** nz))
             if j >= 3:
-                coeff = np.complex128(x * j ** (2*nz))
+                coeff = np.complex128(x * (1j ** (2*nz)))
                 if j == 4:
-                    coeff = np.complex128(x * j ** (3*nz))
+                    coeff = np.complex128(x * (1j ** (3*nz)))
 
+    coeff = complexIO.text_complex(coeff)
     k = np.dot(T, mode)  ## Translate
     k = np.dot(R, k)     ## Rotate 
     ##  T and R as defined do not commute because T includes the Lx, Ly, Lz dependencies of k.  
