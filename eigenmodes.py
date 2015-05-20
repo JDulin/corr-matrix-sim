@@ -21,7 +21,7 @@ def three_torus(n, j, size, angles):
                 size[2]*np.cos(angles[1])] ])
     k = np.dot(T, mode)
     coeff = 1
-    return np.append([n, j, coeff], k)
+    return [n, j, coeff] + k.tolist()
 
 def half_turn(n, j, size, angles):
     T = np.array([ [0, 0, size[0]], 
@@ -37,7 +37,7 @@ def half_turn(n, j, size, angles):
         coeff = 1/np.sqrt(2) * -1**mode[2]
     
     k = np.dot(T, mode)
-    return np.append([n, j, coeff], k)
+    return [n, j, coeff] + k.tolist()
 
 def quarter_turn(n, j, size, angles):
     mode = np.array([n, n, n])
@@ -57,8 +57,6 @@ def quarter_turn(n, j, size, angles):
         coeff = x
         if j >= 2:
             coeff = np.complex128(x * j ** nz)
-            print 'test 2'
-            print coeff
             if j >= 3:
                 coeff = np.complex128(x * j ** (2*nz))
                 if j == 4:
@@ -66,9 +64,9 @@ def quarter_turn(n, j, size, angles):
 
     k = np.dot(T, mode)  ## Translate
     k = np.dot(R, k)     ## Rotate 
-    ##  T and R as defined do not commute because T includes the Lx, Ly, Lz dependencies of k.  So, we multiply k by 
-    ##  R after T to include the length dependencies in k before twisting.
-    return np.append([n, j, coeff], k)
+    ##  T and R as defined do not commute because T includes the Lx, Ly, Lz dependencies of k.  
+    ##  So, compute R(T(k)) to include the length dependencies in k before twisting.
+    return [n, j, coeff] + k.tolist()
 
 def third_turn():
     print "third turn"
@@ -97,8 +95,7 @@ def eigenmodes(args):
         writer = csv.writer(csvfile, delimiter=' ')
         for n in xrange(1, modes+1):   ## Follow math convention - Index terms beginning with 1.
             for j in xrange(1, terms+1):
-                planewave = topologies[top](n, j, size, angles).tolist()
-                planewave[0], planewave[1] = n, j
+                planewave = topologies[top](n, j, size, angles)
                 writer.writerow(planewave)
         
 def commands():
