@@ -1,4 +1,3 @@
-
 """
 John Dulin
 Case Western Reserve University
@@ -41,4 +40,3 @@ if __name__ == '__main__':
     print "Correlation computation in progress..."
     for row in reader(command()):
         print row
-        print complexIO.from_text(row[1])

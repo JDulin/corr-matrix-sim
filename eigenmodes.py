@@ -47,31 +47,38 @@ def quarter_turn(n, j, size, angles):
                 [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
                 size[2]*np.sin(angles[2])*np.sin(angles[1]), 
                 size[2]*np.cos(angles[1])] ])
-    R = np.array([ [0, -1, 0],
+    R = np.matrix([ [0, -1, 0],
                     [1, 0, 0],
                     [0, 0, 1] ])
     x = 1/2.0
     nz = mode[2]
-    if j >= 1:
-        coeff = x
-        if j >= 2:
-            coeff = np.complex128(x * (1j ** nz))
-            if j >= 3:
-                coeff = np.complex128(x * (1j ** (2*nz)))
-                if j == 4:
-                    coeff = np.complex128(x * (1j ** (3*nz)))
+    k = np.transpose(np.dot(T, mode))  ## Translate
 
-    coeff = complexIO.text_complex(coeff)
-    k = np.dot(T, mode)  ## Translate
-    k = np.dot(R, k)     ## Rotate 
     ##  T and R as defined do not commute because T includes the Lx, Ly, Lz dependencies of k.  
-    ##  So, compute R(T(k)) to include the length dependencies in k before twisting.
-    return [n, j, coeff] + k.tolist()
+    ##  So, compute R(T(k)) to include the length dependencies in Tk before twisting.
+    ##  Rotate
+    if j == 1:
+        coeff = x
+    if j == 2:
+        coeff = np.complex128(x * ipower(nz))
+        k = np.dot(R, k)
+    if j == 3:
+        coeff = np.complex128(x * ipower(2*nz))
+        k = np.dot(R**2, k)
+    if j == 4:
+        coeff = np.complex128(x * ipower(3*nz))
+        k = np.dot(R**3, k)
 
-def third_turn():
+    coeff = complexIO.texlex(coeff) 
+    if j == 1:
+        return [n, j, coeff] + k.tolist()
+    else: 
+        return [n, j, coeff] + k.tolist()[0]
+
+def third_turn(n, j, size, angles):
     print "third turn"
 
-def sixth_turn():
+def sixth_turn(n, j, size, angles):
     print "Sixth turn"
 
 topologies = {1 : three_torus, 
@@ -80,7 +87,6 @@ topologies = {1 : three_torus,
               4 : third_turn, 
               5 : sixth_turn}
 
-## TODO: right number of b modes?
 bterms = {1:1, 2:2, 3:4, 4:3, 5:6}
 
 def eigenmodes(args):
@@ -97,7 +103,7 @@ def eigenmodes(args):
             for j in xrange(1, terms+1):
                 planewave = topologies[top](n, j, size, angles)
                 writer.writerow(planewave)
-        
+
 def commands():
     """  
     Parses command line arguments.  
@@ -124,8 +130,18 @@ def commands():
 
     return vars(parser.parse_args())
 
+def ipower(p):
+    """ Computes a power of 'i' for the quarter turn space coeff. """
+    if (p % 4) == 0:    
+        return 1
+    elif (p % 2) == 0:
+        return -1
+    elif (p % 2) == 1 and (p % 4) == 1:
+        return 1j
+    else: 
+        return -1j
+
 if __name__ == '__main__':
     """  Run application. """
     print "Test in Progress"
     eigenmodes(commands())
-    
