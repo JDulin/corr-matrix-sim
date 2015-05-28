@@ -1,7 +1,7 @@
 """
 John Dulin
 Case Western Reserve University
-May 14, 2015
+May 27, 2015
 """
 
 import sys
@@ -14,45 +14,34 @@ import complexIO
 ##  Factor of 2pi removed from wave vector.  Must be added in matrix computation.  
 ##  Format of each file line is: [n, j, xi_nj, kx, ky, kz]
 def three_torus(n, j, size, angles):  
-    mode = np.array([n, n, n])
-    T = np.array([ [0, 0, size[0]], 
-            [size[1]*np.sin(angles[0]), 0, size[1]], 
-                [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
-                size[2]*np.sin(angles[2])*np.sin(angles[1]), 
-                size[2]*np.cos(angles[1])] ])
+    T = slant(size, angles)
+    mode = np.array([[n], [n], [n]])
     k = np.dot(T, mode)
     coeff = 1
-    return [n, j, coeff] + k.tolist()
+    return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
 
 def half_turn(n, j, size, angles):
-    T = np.array([ [0, 0, size[0]], 
-            [size[1]*np.sin(angles[0]), 0, size[1]], 
-                [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
-                size[2]*np.sin(angles[2])*np.sin(angles[1]), 
-                size[2]*np.cos(angles[1])] ])
+    T = slant(size, angles)
     if j == 1:
-        mode = np.array([n, n, n])
+        mode = np.array([[n], [n], [n]])
         coeff = 1/np.sqrt(2)
     elif j == 2:
-        mode = np.array([-n, -n, n])
-        coeff = 1/np.sqrt(2) * -1**mode[2]
+        mode = np.array([[-n], [-n], [n]])
+        coeff = 1/np.sqrt(2) * pow(-1, mode[2][0])
     
     k = np.dot(T, mode)
-    return [n, j, coeff] + k.tolist()
+    return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
 
 def quarter_turn(n, j, size, angles):
-    mode = np.array([n, n, n])
-    T = np.array([ [0, 0, size[0]], 
-            [size[1]*np.sin(angles[0]), 0, size[1]], 
-                [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
-                size[2]*np.sin(angles[2])*np.sin(angles[1]), 
-                size[2]*np.cos(angles[1])] ])
-    R = np.matrix([ [0, -1, 0],
-                    [1, 0, 0],
+    T = slant(size, angles)
+    print T
+    mode = np.array([[n], [n], [n]])
+    R = np.matrix([ [0, -1, 0], 
+                    [1, 0, 0], 
                     [0, 0, 1] ])
     x = 1/2.0
     nz = mode[2]
-    k = np.transpose(np.dot(T, mode))  ## Translate
+    k = np.dot(T, mode)  ## Translate
 
     ##  T and R as defined do not commute because T includes the Lx, Ly, Lz dependencies of k.  
     ##  So, compute R(T(k)) to include the length dependencies in Tk before twisting.
@@ -61,19 +50,16 @@ def quarter_turn(n, j, size, angles):
         coeff = x
     if j == 2:
         coeff = np.complex128(x * ipower(nz))
-        k = np.dot(R, k)
+        k = (R**3).dot(k)
     if j == 3:
         coeff = np.complex128(x * ipower(2*nz))
-        k = np.dot(R**2, k)
+        k = (R**2).dot(k)
     if j == 4:
         coeff = np.complex128(x * ipower(3*nz))
-        k = np.dot(R**3, k)
+        k = R.dot(k)
 
     coeff = complexIO.texlex(coeff) 
-    if j == 1:
-        return [n, j, coeff] + k.tolist()
-    else: 
-        return [n, j, coeff] + k.tolist()[0]
+    return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
 
 def third_turn(n, j, size, angles):
     print "third turn"
@@ -140,6 +126,15 @@ def ipower(p):
         return 1j
     else: 
         return -1j
+
+def slant(size, angles):
+    """ Produces the oblique fundamental domain translation matrix from size and angle arguments for Tops 1-3. """
+    T = np.matrix([ [0, 0, size[0]], 
+            [size[1]*np.sin(angles[0]), 0, size[1]], 
+                [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
+                size[2]*np.sin(angles[2])*np.sin(angles[1]), 
+                size[2]*np.cos(angles[1])] ])
+    return T
 
 if __name__ == '__main__':
     """  Run application. """
