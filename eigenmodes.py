@@ -10,72 +10,83 @@ import numpy as np
 import csv
 import complexIO
 
-##  Topology plane wave term functions.  Indexed by 'topologies' dict, produces a single plane wave indexed by j.  
-##  Factor of 2pi removed from wave vector.  Must be added in matrix computation.  
-##  Format of each file line is: [n, j, xi_nj, kx, ky, kz]
-def three_torus(n, j, size, angles):  
-    T = slant(size, angles)
-    mode = np.array([[n], [n], [n]])
-    k = np.dot(T, mode)
-    coeff = 1
-    return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
+class Topology:
 
-def half_turn(n, j, size, angles):
-    T = slant(size, angles)
-    if j == 1:
+    def __init__(self, size, angles, top, bterms):
+        self.size = size
+        self.angles = angles
+        self.top = top  
+        self.bterms = bterms
+        ## Inverse parallelepiped translation
+        self.Ti = np.matrix([ [0, 0, size[0]], 
+                    [size[1]*np.sin(angles[0]), 0, size[1]*np.cos(angles[0])], 
+                    [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
+                    size[2]*np.sin(angles[2])*np.sin(angles[1]), 
+                    size[2]*np.cos(angles[1])] ]).I
+
+    ##  Topology plane wave term functions.  Indexed by 'topologies' dict, produces a single plane wave indexed by j.  
+    ##  Factor of 2pi removed from wave vector.  Must be added in matrix computation.  
+    ##  Format of each file line is: [n, j, xi_nj, kx, ky, kz]
+    def three_torus(self, n, j):  
         mode = np.array([[n], [n], [n]])
-        coeff = 1/np.sqrt(2)
-    elif j == 2:
-        mode = np.array([[-n], [-n], [n]])
-        coeff = 1/np.sqrt(2) * pow(-1, mode[2][0])
+        k = np.dot(self.Ti, mode)
+        coeff = 1
+        return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
     
-    k = np.dot(T, mode)
-    return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
+    def half_turn(self, n, j):
+        if j == 1:
+            mode = np.array([[n], [n], [n]])
+            coeff = 1/np.sqrt(2)
+        elif j == 2:
+            mode = np.array([[-n], [-n], [n]])
+            coeff = 1/np.sqrt(2) * pow(-1, mode[2][0])
+        
+        k = np.dot(self.Ti, mode)
+        return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
+    
+    def quarter_turn(self, n, j):
+        mode = np.array([[n], [n], [n]])
+        R = np.matrix([ [0, -1, 0], 
+                        [1, 0, 0], 
+                        [0, 0, 1] ])
+        x = 1/2.0
+        nz = mode[2]
+        k = np.dot(self.Ti, mode)  ## Translate
+    
+        ##  T and R as defined do not commute because T includes the Lx, Ly, Lz dependencies of k.  
+        ##  So, compute R(T(k)) to include the length dependencies in Tk before twisting.
+        ##  Rotate
+        if j == 1:
+            coeff = x
+        if j == 2:
+            coeff = np.complex128(x * ipower(nz))
+            k = (R**3).dot(k)
+        if j == 3:
+            coeff = np.complex128(x * ipower(2*nz))
+            k = (R**2).dot(k)
+        if j == 4:
+            coeff = np.complex128(x * ipower(3*nz))
+            k = R.dot(k)
+    
+        coeff = complexIO.texlex(coeff) 
+        return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
+    
+    def third_turn(self, n, j):
+        print "third turn"
+    
+    def sixth_turn(self, n, j):
+        print "Sixth turn"
 
-def quarter_turn(n, j, size, angles):
-    T = slant(size, angles)
-    print T
-    mode = np.array([[n], [n], [n]])
-    R = np.matrix([ [0, -1, 0], 
-                    [1, 0, 0], 
-                    [0, 0, 1] ])
-    x = 1/2.0
-    nz = mode[2]
-    k = np.dot(T, mode)  ## Translate
-
-    ##  T and R as defined do not commute because T includes the Lx, Ly, Lz dependencies of k.  
-    ##  So, compute R(T(k)) to include the length dependencies in Tk before twisting.
-    ##  Rotate
-    if j == 1:
-        coeff = x
-    if j == 2:
-        coeff = np.complex128(x * ipower(nz))
-        k = (R**3).dot(k)
-    if j == 3:
-        coeff = np.complex128(x * ipower(2*nz))
-        k = (R**2).dot(k)
-    if j == 4:
-        coeff = np.complex128(x * ipower(3*nz))
-        k = R.dot(k)
-
-    coeff = complexIO.texlex(coeff) 
-    return [n, j, coeff] + k.reshape((1,3)).tolist()[0]
-
-def third_turn(n, j, size, angles):
-    print "third turn"
-
-def sixth_turn(n, j, size, angles):
-    print "Sixth turn"
-
-topologies = {1 : three_torus, 
-              2 : half_turn, 
-              3 : quarter_turn,
-              4 : third_turn, 
-              5 : sixth_turn}
+    space = {1 : three_torus, 
+             2 : half_turn, 
+             3 : quarter_turn,
+             4 : third_turn, 
+             5 : sixth_turn}
 
 bterms = {1:1, 2:2, 3:4, 4:3, 5:6}
 
 def eigenmodes(args):
+    """  Produces the output file of eigenmodes, one term per line.  """
     filename = '%(eigenmodes)s_Top%(top)s_%(lx)s_%(ly)s_%(lz)s_%(ax)s_%(ay)s_%(az)s.csv' % args
     size = np.array([args['lx'], args['ly'], args['lz']])
     angles = np.array([args['ax'], args['ay'], args['az']])
@@ -83,11 +94,13 @@ def eigenmodes(args):
     top = args['top']
     terms = bterms[top]
     
+    shape = Topology(size, angles, top, terms)
+    
     with open(filename, 'wb') as csvfile:
         writer = csv.writer(csvfile, delimiter=' ')
         for n in xrange(1, modes+1):   ## Follow math convention - Index terms beginning with 1.
             for j in xrange(1, terms+1):
-                planewave = topologies[top](n, j, size, angles)
+                planewave = shape.space[top](shape, n, j)
                 writer.writerow(planewave)
 
 def commands():
@@ -126,15 +139,6 @@ def ipower(p):
         return 1j
     else: 
         return -1j
-
-def slant(size, angles):
-    """ Produces the oblique fundamental domain translation matrix from size and angle arguments for Tops 1-3. """
-    T = np.matrix([ [0, 0, size[0]], 
-            [size[1]*np.sin(angles[0]), 0, size[1]], 
-                [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
-                size[2]*np.sin(angles[2])*np.sin(angles[1]), 
-                size[2]*np.cos(angles[1])] ])
-    return T
 
 if __name__ == '__main__':
     """  Run application. """
