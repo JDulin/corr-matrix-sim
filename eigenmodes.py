@@ -17,12 +17,19 @@ class Topology:
         self.angles = angles
         self.top = top  
         self.bterms = bterms
-        ## Inverse parallelepiped translation
-        self.Ti = np.matrix([ [0, 0, size[0]], 
+        ## Parallelepiped translation
+        T = np.matrix([ [0, 0, size[0]], 
                     [size[1]*np.sin(angles[0]), 0, size[1]*np.cos(angles[0])], 
                     [size[2]*np.cos(angles[2])*np.sin(angles[1]), 
                     size[2]*np.sin(angles[2])*np.sin(angles[1]), 
-                    size[2]*np.cos(angles[1])] ]).I
+                    size[2]*np.cos(angles[1])] ])
+        ## Check to see if pseudo-inverse is necessary.
+        if np.linalg.cond(T) < 1/sys.float_info.epsilon:
+            # Define inverse
+            self.Ti = T.I
+        else:
+            # Just define the identity
+            self.Ti = np.identity(3)
 
     ##  Topology plane wave term functions.  Indexed by 'topologies' dict, produces a single plane wave indexed by j.  
     ##  Factor of 2pi removed from wave vector.  Must be added in matrix computation.  
