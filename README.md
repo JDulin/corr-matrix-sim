@@ -43,9 +43,10 @@ This will output a space separated value file named
 
 `200_Top3_1.0_1.0_1.0_0.5_0.5_0.5.csv`   ,
 
-which is named by "N_TopI_Lx_Ly_Lz_A1_A2_A3" where I is the index of the topology.  
-Note that the factor of 2*pi is removed from the **k** terms in this file 
+which is named by "N_Top(I)_Lx_Ly_Lz_A1_A2_A3" where I is the index of the topology.  
+Note that the factor of 2x(pi) is removed from the **k** terms in this file 
 and is added back in the correlation matrix.  
+
 Each line of the file has the same format:
 
 `n j xi_j kx ky kz`   .
@@ -61,7 +62,9 @@ Instructions for installing the entire 'Scipy stack' are through the link above.
 
 ##  Notes and Issues
 
-
+The inverse oblique transformation matrix is singular for unoblique rectangular 
+prism fundamental domains.  So, the code catches this case and simply 
+multiplies the wave vector by the identity matrix.
 
 Some simple functions for writing and reading complex numbers to file are 
 defined in complexIO.py for writing complex coefficients of eigenmode terms. 
